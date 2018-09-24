@@ -103,8 +103,9 @@ colors_plasma = colors_subselect(mpcm.plasma.colors, num_classes=21)
 
 
 # 主流程函数
-def process_image(img, case, select_threshold=0.15, nms_threshold=.1, net_shape=(300, 300)):
-    # select_threshold：box阈值——每个像素的box分类预测数据的得分会与box阈值比较，高于一个box阈值则认为这个box成功框到了一个对象
+def process_image(img,select_threshold=0.15, nms_threshold=.1, net_shape=(300, 300)):
+    # select_threshold：box阈值——每个像素的box分类预测数据的得分会与box阈值比较，高于一个box阈值则认为这个box成功框到
+    #                   了一个对象
     # nms_threshold：重合度阈值——同一对象的两个框的重合度高于该阈值，则运行下面去重函数
 
     # 执行SSD模型，得到4维输入变量，分类预测，坐标预测，rbbox_img参数为最大检测范围，本文固定为[0,0,1,1]即全图
@@ -150,12 +151,13 @@ def process_image(img, case, select_threshold=0.15, nms_threshold=.1, net_shape=
     # 将box的坐标重新映射到原图上（上文所有的坐标都进行了归一化，所以要逆操作一次）
     rbboxes = np_methods.bboxes_resize(rbbox_img, rbboxes)
 
-    if case == 1:
-        bboxes_draw_on_img(img, rclasses, rscores, rbboxes, colors_plasma, thickness=8)
-        return img
-    else:
-        return rclasses, rscores, rbboxes
-
+    # if case == 1:
+    #     bboxes_draw_on_img(img, rclasses, rscores, rbboxes, colors_plasma, thickness=8)
+    #     return img
+    # else:
+    #     return rclasses, rscores, rbboxes
+    bboxes_draw_on_img(img, rclasses, rscores, rbboxes, colors_plasma, thickness=8)
+    return img
 
 """
 # 只做目标定位，不做预测分析
@@ -165,13 +167,30 @@ img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 plt.imshow(process_image(img, case))
 plt.show()
 """
-# 做目标定位，同时做预测分析
-case = 2
-path = '../demo/person.jpg'
-# 读取图片
-img = mpimg.imread(path)
-# 执行主流程函数
-rclasses, rscores, rbboxes = process_image(img, case)
-# visualization.bboxes_draw_on_img(img, rclasses, rscores, rbboxes, visualization.colors_plasma)
-# 显示分类结果图
-visualization.plt_bboxes(img, rclasses, rscores, rbboxes)
+# # 做目标定位，同时做预测分析
+# case = 2
+# path = '../demo/person.jpg'
+# # 读取图片
+# img = mpimg.imread(path)
+# # 执行主流程函数
+# rclasses, rscores, rbboxes = process_image(img, case)
+# # visualization.bboxes_draw_on_img(img, rclasses, rscores, rbboxes, visualization.colors_plasma)
+# # 显示分类结果图
+# visualization.plt_bboxes(img, rclasses, rscores, rbboxes)
+
+# 视频物体定位
+import imageio
+imageio.plugins.ffmpeg.download()
+from moviepy.editor import VideoFileClip
+
+
+def process_video(input_path, output_path):
+    video = VideoFileClip(input_path)
+    result = video.fl_image(process_image)
+    result.write_videofile(output_path, fps=40)
+
+
+video_name = "test01.mp4"
+input_path = "../Video/input/" + video_name
+output_path = "../Video/output/output_" + video_name
+process_video(input_path, output_path)
